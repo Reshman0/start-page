@@ -45,7 +45,7 @@ links:
     title: DeepSeek
     src: deepseek.svg
     alt: deepseek-icon
-  - href: https://github.com/ahmetdem
+  - href: https://github.com/Reshman0
     title: Github
     src: github.svg
     alt: github-icon
@@ -69,7 +69,7 @@ links:
     title: ZLibrary
     src: zlibrary.svg
     alt: zlibrary-icon
-  - href: https://www.linkedin.com/in/ahmetdem/
+  - href: https://www.linkedin.com/
     title: Linkedin
     src: linkedin.svg
     alt: linkedin-icon
