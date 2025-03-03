@@ -3,9 +3,10 @@ const name = "bekirberk";
 ---
 
 <section>
-  <p>{name}@<span id="browser-info"></span> |</p>
+  <p id="username">{name}@<span id="browser-info"></span> |</p>
   <input id="terminal-input" type="text" />
 </section>
+
 <style>
   section {
     display: flex;
@@ -15,12 +16,17 @@ const name = "bekirberk";
     gap: 20px;
     padding: 5px;
     border-radius: var(--border-radius);
+    background-color: white;
     border: 1px solid black; /* Add this to visualize each section */
   }
 
   p {
     font-family: var(--monospace-font-family);
     font-size: 20px;
+  }
+
+  #username {
+    color: rgb(0, 0, 0); /* Change this to any color you want */
   }
 
   #browser-info {
@@ -70,26 +76,36 @@ const name = "bekirberk";
 
   const input = document.getElementById("terminal-input");
   const examples = [
-    "how to tie a tie",
+    "how to tie a tie?",
     "today's weather",
-    "is it halloween yet",
-    "what's my age again",
+    "search on reddit with r:query",
+    "search stackoverflow with s:query",
     "make the terminal great again",
-    "we'll make our terminal... with blackjack and hookers!",
     "hey sexy! wanna kill all humans?",
-    "another pointless day where I accomplish nothing",
-    "did everything just taste purple for a second?",
-    "at the risk of sounding positive, you can do this!",
-    "you look good today!",
-    "press ctrl+c to clear the terminal",
-    "you can search reddit by starting your search with r:",
-    "you can search stack overflow by starting your search with s:",
-    "input 'help' for more info",
+    "press ctrl+c to clear",
     "Bunu okuyan gaydır.",
   ];
 
-  const randomIndex = Math.floor(Math.random() * examples.length);
-  input.placeholder = examples[randomIndex];
+  let exampleIndex = 0;
+  let charIndex = 0;
+  let typingSpeed = 50; // Speed of typing effect
+
+  function typePlaceholder() {
+    if (charIndex < examples[exampleIndex].length) {
+      input.placeholder += examples[exampleIndex].charAt(charIndex);
+      charIndex++;
+      setTimeout(typePlaceholder, typingSpeed);
+    } else {
+      setTimeout(() => {
+        input.placeholder = "";
+        charIndex = 0;
+        exampleIndex = (exampleIndex + 1) % examples.length;
+        typePlaceholder();
+      }, 2000);
+    }
+  }
+
+  typePlaceholder();
 
   // Automatically focus the input when the page loads
   input.focus();
@@ -99,34 +115,111 @@ const name = "bekirberk";
     input.focus();
   });
 
-  input.addEventListener("keydown", function (event) {
-    let value = input.value.toLowerCase();
-    let elements = document.querySelectorAll("a");
+  let elements = document.querySelectorAll("a");
 
-    let matchFound = false;
-    if (event.ctrlKey && event.key === "c") {
-      input.value = "";
-      for (let i = 0; i < elements.length; i++) {
-        let element = elements[i];
-        element.style.mixBlendMode = "";
+  // Add this CSS to your stylesheet or in a style tag
+  const styleTag = document.createElement("style");
+  styleTag.textContent = `
+  .bookmark-match {
+    opacity: 1 !important;
+    filter: brightness(1.3) !important;
+    transform: scale(1.05) !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.8) !important;
+  }
+
+  .bookmark-nomatch {
+    opacity: 0.3 !important;
+    filter: grayscale(80%) !important;
+    transform: scale(0.95) !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .bookmark-nomatch-parent {
+    text-decoration: line-through !important;
+  }
+
+  /* Ensure hover effects always take priority */
+  ul li a:hover {
+    background-color: var(--card-item-hover-background-color) !important;
+    transform: scale(1.03) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+`;
+  document.head.appendChild(styleTag);
+
+  // Function to reset all styles
+  function resetStyles() {
+    for (let element of elements) {
+      element.classList.remove("bookmark-match");
+      element.classList.remove("bookmark-nomatch");
+      element.parentElement.classList.remove("bookmark-nomatch-parent");
+    }
+  }
+
+  // Check input content and apply styles accordingly
+  input.addEventListener("input", function () {
+    let value = input.value.toLowerCase();
+
+    // Reset all styles if input is empty
+    if (value === "") {
+      resetStyles();
+      return;
+    }
+
+    // Process all link elements
+    for (let element of elements) {
+      let text = element.textContent.toLowerCase();
+      let isMatch = text.includes(value.replace(/^r:|^s:|^m:/, ""));
+
+      if (isMatch) {
+        // Highlight matching items
+        element.classList.add("bookmark-match");
+        element.classList.remove("bookmark-nomatch");
+        element.parentElement.classList.remove("bookmark-nomatch-parent");
+      } else {
+        // Fade non-matching items
+        element.classList.remove("bookmark-match");
+        element.classList.add("bookmark-nomatch");
+        element.parentElement.classList.add("bookmark-nomatch-parent");
       }
     }
-    for (let i = 0; i < elements.length; i++) {
-      let element = elements[i];
-      if (value === "" || event.keyCode !== 13) {
-        continue;
-      }
+  });
+
+  // Handle keyboard events
+  input.addEventListener("keydown", function (event) {
+    let value = input.value.toLowerCase();
+    let matchFound = false;
+
+    // Ctrl+C to clear and reset
+    if (event.ctrlKey && event.key === "c") {
+      input.value = "";
+      resetStyles();
+      return;
+    }
+
+    // Only process further if Enter is pressed
+    if (event.key !== "Enter") return;
+
+    // Find matching link
+    for (let element of elements) {
+      if (value === "") continue;
+
       if (
         element.textContent
           .toLowerCase()
-          .indexOf(value.replace(/^r:|^s:/, "")) !== -1
+          .indexOf(value.replace(/^r:|^s:|^m:/, "")) !== -1
       ) {
         window.location.href = element.href;
         matchFound = true;
         break;
       }
     }
-    if (!matchFound && event.keyCode === 13) {
+
+    // Handle special commands and search
+    if (!matchFound) {
       if (value === "help") {
         document.getElementById("help").style.display = "block";
         document.getElementById("overlay").classList.add("active");
@@ -143,8 +236,7 @@ const name = "bekirberk";
           "https://google.com/search?q=site:myanimelist.net " +
           value.replace("m:", "");
       } else if (value.startsWith("gay hakan")) {
-        window.location.href =
-          "https://myanimelist.net/profile/Asteria";
+        window.location.href = "https://myanimelist.net/profile/Asteria";
       } else {
         let words = value.split(".");
         if (words.length >= 2) {
@@ -154,6 +246,18 @@ const name = "bekirberk";
         }
       }
     }
+  });
+
+  // Make sure to reset styles when the input is cleared or focus is lost
+  input.addEventListener("blur", function () {
+    if (input.value === "") {
+      resetStyles();
+    }
+  });
+
+  // Additional handler for when the page loads
+  document.addEventListener("DOMContentLoaded", function () {
+    resetStyles();
   });
 
   input.addEventListener("input", function () {
@@ -171,6 +275,35 @@ const name = "bekirberk";
         element.style.mixBlendMode = "";
       } else {
         element.style.mixBlendMode = "color-burn";
+      }
+    }
+  });
+
+  let commandHistory = [];
+  let historyIndex = -1;
+
+  input.addEventListener("keydown", function (event) {
+    if (event.key === "ArrowUp") {
+      if (historyIndex > 0) {
+        historyIndex--;
+        input.value = commandHistory[historyIndex];
+      }
+      event.preventDefault();
+    } else if (event.key === "ArrowDown") {
+      if (historyIndex < commandHistory.length - 1) {
+        historyIndex++;
+        input.value = commandHistory[historyIndex];
+      } else {
+        input.value = "";
+        historyIndex = commandHistory.length;
+        resetStyles();
+      }
+      event.preventDefault();
+    } else if (event.key === "Enter") {
+      let command = input.value.trim();
+      if (command !== "") {
+        commandHistory.push(command);
+        historyIndex = commandHistory.length;
       }
     }
   });
